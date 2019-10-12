@@ -1,7 +1,5 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+#![feature(uniform_paths)]
+
+pub use vector::{VectorXYZ0, Vector0XYZ, VectorXYZW, VectorWXYZ};
+
+mod vector;
