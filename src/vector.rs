@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::mem;
+
 use num_traits::Zero;
 
 
 #[cfg_attr(feature = "repr_simd", repr(simd))]
+#[derive(PartialEq, Eq, Copy, Clone, Hash)]
 pub struct VectorXYZ0<S> {
     pub x: S,
     pub y: S,
@@ -24,6 +27,7 @@ pub struct VectorXYZ0<S> {
 }
 
 #[cfg_attr(feature = "repr_simd", repr(simd))]
+#[derive(PartialEq, Eq, Copy, Clone, Hash)]
 pub struct Vector0XYZ<S> {
     _w: S,
     pub x: S,
@@ -32,6 +36,7 @@ pub struct Vector0XYZ<S> {
 }
 
 #[cfg_attr(feature = "repr_simd", repr(simd))]
+#[derive(PartialEq, Eq, Copy, Clone, Hash)]
 pub struct VectorXYZW<S> {
     pub x: S,
     pub y: S,
@@ -40,11 +45,51 @@ pub struct VectorXYZW<S> {
 }
 
 #[cfg_attr(feature = "repr_simd", repr(simd))]
+#[derive(PartialEq, Eq, Copy, Clone, Hash)]
 pub struct VectorWXYZ<S> {
     pub w: S,
     pub x: S,
     pub y: S,
     pub z: S,
+}
+
+
+macro_rules! impl_fixed_array_conversions {
+    ($VectorN:ident) => {
+        impl<S> AsRef<[S; 4]> for $VectorN<S> {
+            #[inline]
+            fn as_ref(&self) -> &[S; 4] {
+                unsafe { mem::transmute(self) }
+            }
+        }
+
+        impl<S> AsMut<[S; 4]> for $VectorN<S> {
+            #[inline]
+            fn as_mut(&mut self) -> &mut [S; 4] {
+                unsafe { mem::transmute(self) }
+            }
+        }
+
+        impl<S: Copy> Into<[S; 4]> for $VectorN<S> {
+            #[inline]
+            fn into(self) -> [S; 4] {
+                *self.as_ref()
+            }
+        }
+
+        // can't convert from reference to reference, since array may not be aligned
+
+        impl<S: Copy> From<[S; 4]> for $VectorN<S> {
+            #[inline]
+            fn from(v: [S; 4]) -> $VectorN<S> {
+                unsafe {
+                    let mut res: $VectorN<S> = std::mem::uninitialized();
+                    *res.as_mut() = v;
+                    res
+                }
+            }
+        }
+    }
 }
 
 macro_rules! impl_vector3 {
@@ -55,6 +100,8 @@ macro_rules! impl_vector3 {
                 $VectorN { x: x, y: y, z: z, _w: S::zero() }
             }
         }
+
+        impl_fixed_array_conversions!($VectorN);
     };
 }
 
@@ -71,8 +118,13 @@ macro_rules! impl_vector3w {
                 $VectorN { x: x, y: y, z: z, w: w }
             }
         }
+
+        impl_fixed_array_conversions!($VectorN);
     };
 }
+
+
+
 
 impl_vector3!(Vector0XYZ);
 impl_vector3!(VectorXYZ0);
@@ -82,27 +134,38 @@ impl_vector3w!(VectorXYZW);
 
 #[test]
 fn test_constructor() {
-    let v1 = Vector0XYZ::from_xyz(1,2,3);
-    assert_eq!(v1.x, 1);
-    assert_eq!(v1.y, 2);
+    type S = f32;
+    let x: S = 1.;
+    let y: S = 2.;
+    let z: S = 3.;
+    let w: S = 7.;
+    let zero: S = 0.;
 
-    let v2 = VectorXYZ0::from_xyz(1,2,3);
-    assert_eq!(v2.x, 1);
-    assert_eq!(v2.y, 2);
+    let v1 = Vector0XYZ::from_xyz(x,y,z);
+    assert_eq!(v1.x, x);
+    assert_eq!(*v1.as_ref(), [zero,x,y,z]);
 
-    let v3 = VectorWXYZ::from_xyz(1,2,3);
-    assert_eq!(v3.x, 1);
-    assert_eq!(v3.w, 0);
+    let v2 = VectorXYZ0::from_xyz(x,y,z);
+    assert_eq!(v2.x, x);
+    assert_eq!(*v2.as_ref(), [x,y,z,zero]);
 
-    let v4 = VectorXYZW::from_xyz(1,2,3);
-    assert_eq!(v4.x, 1);
-    assert_eq!(v4.w, 0);
+    let v3 = VectorWXYZ::from_xyz(x,y,z);
+    assert_eq!(v3.x, x);
+    assert_eq!(v3.w, zero);
+    assert_eq!(*v3.as_ref(), [zero,x,y,z]);
 
-    let v5 = VectorWXYZ::from_xyzw(1,2,3,4);
-    assert_eq!(v5.x, 1);
-    assert_eq!(v5.w, 4);
+    let v4 = VectorXYZW::from_xyz(x,y,z);
+    assert_eq!(v4.x, x);
+    assert_eq!(v4.w, zero);
+    assert_eq!(*v4.as_ref(), [x,y,z,zero]);
 
-    let v6 = VectorXYZW::from_xyzw(1,2,3,4);
-    assert_eq!(v6.x, 1);
-    assert_eq!(v6.w, 4);
+    let v5 = VectorWXYZ::from_xyzw(x,y,z,w);
+    assert_eq!(v5.x, x);
+    assert_eq!(v5.w, w);
+    assert_eq!(*v5.as_ref(), [w,x,y,z]);
+
+    let v6 = VectorXYZW::from_xyzw(x,y,z,w);
+    assert_eq!(v6.x, x);
+    assert_eq!(v6.w, w);
+    assert_eq!(*v6.as_ref(), [x,y,z,w]);
 }
