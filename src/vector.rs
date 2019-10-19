@@ -55,22 +55,22 @@ pub struct VectorWXYZ<S> {
 
 
 macro_rules! impl_fixed_array_conversions {
-    ($VectorN:ident) => {
-        impl<S> AsRef<[S; 4]> for $VectorN<S> {
+    ($V:ident) => {
+        impl<S> AsRef<[S; 4]> for $V<S> {
             #[inline]
             fn as_ref(&self) -> &[S; 4] {
                 unsafe { mem::transmute(self) }
             }
         }
 
-        impl<S> AsMut<[S; 4]> for $VectorN<S> {
+        impl<S> AsMut<[S; 4]> for $V<S> {
             #[inline]
             fn as_mut(&mut self) -> &mut [S; 4] {
                 unsafe { mem::transmute(self) }
             }
         }
 
-        impl<S: Copy> Into<[S; 4]> for $VectorN<S> {
+        impl<S: Copy> Into<[S; 4]> for $V<S> {
             #[inline]
             fn into(self) -> [S; 4] {
                 *self.as_ref()
@@ -79,11 +79,11 @@ macro_rules! impl_fixed_array_conversions {
 
         // can't convert from reference to reference, since array may not be aligned
 
-        impl<S: Copy> From<[S; 4]> for $VectorN<S> {
+        impl<S: Copy> From<[S; 4]> for $V<S> {
             #[inline]
-            fn from(v: [S; 4]) -> $VectorN<S> {
+            fn from(v: [S; 4]) -> $V<S> {
                 unsafe {
-                    let mut res: $VectorN<S> = std::mem::uninitialized();
+                    let mut res: $V<S> = std::mem::uninitialized();
                     *res.as_mut() = v;
                     res
                 }
@@ -93,33 +93,33 @@ macro_rules! impl_fixed_array_conversions {
 }
 
 macro_rules! impl_vector3 {
-    ($VectorN:ident) => {
-        impl<S: Zero> $VectorN<S> {
+    ($V:ident) => {
+        impl<S: Zero> $V<S> {
             #[inline]
-            pub fn from_xyz(x: S, y: S, z: S) -> $VectorN<S> {
-                $VectorN { x: x, y: y, z: z, _w: S::zero() }
+            pub fn from_xyz(x: S, y: S, z: S) -> $V<S> {
+                $V { x: x, y: y, z: z, _w: S::zero() }
             }
         }
 
-        impl_fixed_array_conversions!($VectorN);
+        impl_fixed_array_conversions!($V);
     };
 }
 
 macro_rules! impl_vector3w {
-    ($VectorN:ident) => {
-        impl<S: Zero> $VectorN<S> {
+    ($V:ident) => {
+        impl<S: Zero> $V<S> {
             #[inline]
-            pub fn from_xyz(x: S, y: S, z: S) -> $VectorN<S> {
-                $VectorN { x: x, y: y, z: z, w: S::zero() }
+            pub fn from_xyz(x: S, y: S, z: S) -> $V<S> {
+                $V { x: x, y: y, z: z, w: S::zero() }
             }
 
             #[inline]
-            pub fn from_xyzw(x: S, y: S, z: S, w: S) -> $VectorN<S> {
-                $VectorN { x: x, y: y, z: z, w: w }
+            pub fn from_xyzw(x: S, y: S, z: S, w: S) -> $V<S> {
+                $V { x: x, y: y, z: z, w: w }
             }
         }
 
-        impl_fixed_array_conversions!($VectorN);
+        impl_fixed_array_conversions!($V);
     };
 }
 
@@ -138,7 +138,7 @@ fn test_constructor() {
     let x: S = 1.;
     let y: S = 2.;
     let z: S = 3.;
-    let w: S = 7.;
+    let w: S = 42.;
     let zero: S = 0.;
 
     let v1 = Vector0XYZ::from_xyz(x,y,z);
