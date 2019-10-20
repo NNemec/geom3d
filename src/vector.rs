@@ -14,76 +14,76 @@
 
 use std::mem;
 
-use num_traits::Zero;
+use num_traits::Float;
 
 
 #[cfg_attr(feature = "repr_simd", repr(simd))]
 #[derive(PartialEq, Eq, Copy, Clone, Hash)]
-pub struct VectorXYZ0<S> {
-    pub x: S,
-    pub y: S,
-    pub z: S,
-    _w: S,
+pub struct VectorXYZ0<F: Float> {
+    pub x: F,
+    pub y: F,
+    pub z: F,
+    _w: F,
 }
 
 #[cfg_attr(feature = "repr_simd", repr(simd))]
 #[derive(PartialEq, Eq, Copy, Clone, Hash)]
-pub struct Vector0XYZ<S> {
-    _w: S,
-    pub x: S,
-    pub y: S,
-    pub z: S,
+pub struct Vector0XYZ<F: Float> {
+    _w: F,
+    pub x: F,
+    pub y: F,
+    pub z: F,
 }
 
 #[cfg_attr(feature = "repr_simd", repr(simd))]
 #[derive(PartialEq, Eq, Copy, Clone, Hash)]
-pub struct VectorXYZW<S> {
-    pub x: S,
-    pub y: S,
-    pub z: S,
-    pub w: S,
+pub struct VectorXYZW<F: Float> {
+    pub x: F,
+    pub y: F,
+    pub z: F,
+    pub w: F,
 }
 
 #[cfg_attr(feature = "repr_simd", repr(simd))]
 #[derive(PartialEq, Eq, Copy, Clone, Hash)]
-pub struct VectorWXYZ<S> {
-    pub w: S,
-    pub x: S,
-    pub y: S,
-    pub z: S,
+pub struct VectorWXYZ<F: Float> {
+    pub w: F,
+    pub x: F,
+    pub y: F,
+    pub z: F,
 }
 
 
 macro_rules! impl_fixed_array_conversions {
     ($V:ident) => {
-        impl<S> AsRef<[S; 4]> for $V<S> {
+        impl<F: Float> AsRef<[F; 4]> for $V<F> {
             #[inline]
-            fn as_ref(&self) -> &[S; 4] {
+            fn as_ref(&self) -> &[F; 4] {
                 unsafe { mem::transmute(self) }
             }
         }
 
-        impl<S> AsMut<[S; 4]> for $V<S> {
+        impl<F: Float> AsMut<[F; 4]> for $V<F> {
             #[inline]
-            fn as_mut(&mut self) -> &mut [S; 4] {
+            fn as_mut(&mut self) -> &mut [F; 4] {
                 unsafe { mem::transmute(self) }
             }
         }
 
-        impl<S: Copy> Into<[S; 4]> for $V<S> {
+        impl<F: Float> Into<[F; 4]> for $V<F> {
             #[inline]
-            fn into(self) -> [S; 4] {
+            fn into(self) -> [F; 4] {
                 *self.as_ref()
             }
         }
 
         // can't convert from reference to reference, since array may not be aligned
 
-        impl<S: Copy> From<[S; 4]> for $V<S> {
+        impl<F: Float> From<[F; 4]> for $V<F> {
             #[inline]
-            fn from(v: [S; 4]) -> $V<S> {
+            fn from(v: [F; 4]) -> $V<F> {
                 unsafe {
-                    let mut res: $V<S> = std::mem::uninitialized();
+                    let mut res: $V<F> = std::mem::uninitialized();
                     *res.as_mut() = v;
                     res
                 }
@@ -94,10 +94,10 @@ macro_rules! impl_fixed_array_conversions {
 
 macro_rules! impl_vector3 {
     ($V:ident) => {
-        impl<S: Zero> $V<S> {
+        impl<F: Float> $V<F> {
             #[inline]
-            pub fn from_xyz(x: S, y: S, z: S) -> $V<S> {
-                $V { x: x, y: y, z: z, _w: S::zero() }
+            pub fn from_xyz(x: F, y: F, z: F) -> $V<F> {
+                $V { x: x, y: y, z: z, _w: F::zero() }
             }
         }
 
@@ -107,14 +107,14 @@ macro_rules! impl_vector3 {
 
 macro_rules! impl_vector3w {
     ($V:ident) => {
-        impl<S: Zero> $V<S> {
+        impl<F: Float> $V<F> {
             #[inline]
-            pub fn from_xyz(x: S, y: S, z: S) -> $V<S> {
-                $V { x: x, y: y, z: z, w: S::zero() }
+            pub fn from_xyz(x: F, y: F, z: F) -> $V<F> {
+                $V { x: x, y: y, z: z, w: F::zero() }
             }
 
             #[inline]
-            pub fn from_xyzw(x: S, y: S, z: S, w: S) -> $V<S> {
+            pub fn from_xyzw(x: F, y: F, z: F, w: F) -> $V<F> {
                 $V { x: x, y: y, z: z, w: w }
             }
         }
@@ -134,12 +134,12 @@ impl_vector3w!(VectorXYZW);
 
 #[test]
 fn test_constructor() {
-    type S = f32;
-    let x: S = 1.;
-    let y: S = 2.;
-    let z: S = 3.;
-    let w: S = 42.;
-    let zero: S = 0.;
+    type F = f32;
+    let x: F = 1.;
+    let y: F = 2.;
+    let z: F = 3.;
+    let w: F = 42.;
+    let zero: F = 0.;
 
     let v1 = Vector0XYZ::from_xyz(x,y,z);
     assert_eq!(v1.x, x);
