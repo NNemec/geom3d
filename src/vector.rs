@@ -56,80 +56,74 @@ pub struct VectorWXYZ<F: Float> {
 
 /******************************************************************************/
 
-macro_rules! impl_vector3_from_xyz {
-    ($V:ident) => {
-        impl<F: Float> $V<F> {
-            #[inline]
-            pub fn from_xyz(x: F, y: F, z: F) -> $V<F> {
-                $V { x: x, y: y, z: z, _w: F::zero() }
-            }
+macro_rules! impl_vector3_from_xyz { ($V:ident) => {
+    impl<F: Float> $V<F> {
+        #[inline]
+        pub fn from_xyz(x: F, y: F, z: F) -> $V<F> {
+            $V { x: x, y: y, z: z, _w: F::zero() }
         }
-    };
-}
+    }
+}}
 
 impl_vector3_from_xyz!(Vector0XYZ);
 impl_vector3_from_xyz!(VectorXYZ0);
 
 /******************************************************************************/
 
-macro_rules! impl_vector3w_from_xyzw {
-    ($V:ident) => {
-        impl<F: Float> $V<F> {
-            #[inline]
-            pub fn from_xyz(x: F, y: F, z: F) -> $V<F> {
-                $V { x: x, y: y, z: z, w: F::zero() }
-            }
-
-            #[inline]
-            pub fn from_xyzw(x: F, y: F, z: F, w: F) -> $V<F> {
-                $V { x: x, y: y, z: z, w: w }
-            }
+macro_rules! impl_vector3w_from_xyzw { ($V:ident) => {
+    impl<F: Float> $V<F> {
+        #[inline]
+        pub fn from_xyz(x: F, y: F, z: F) -> $V<F> {
+            $V { x: x, y: y, z: z, w: F::zero() }
         }
-    };
-}
+
+        #[inline]
+        pub fn from_xyzw(x: F, y: F, z: F, w: F) -> $V<F> {
+            $V { x: x, y: y, z: z, w: w }
+        }
+    }
+}}
 
 impl_vector3w_from_xyzw!(VectorWXYZ);
 impl_vector3w_from_xyzw!(VectorXYZW);
 
 /******************************************************************************/
 
-macro_rules! impl_fixed_array_conversions {
-    ($V:ident) => {
-        impl<F: Float> AsRef<[F; 4]> for $V<F> {
-            #[inline]
-            fn as_ref(&self) -> &[F; 4] {
-                unsafe { mem::transmute(self) }
-            }
+macro_rules! impl_fixed_array_conversions { ($V:ident) => {
+    impl<F: Float> AsRef<[F; 4]> for $V<F> {
+        #[inline]
+        fn as_ref(&self) -> &[F; 4] {
+            unsafe { mem::transmute(self) }
         }
+    }
 
-        impl<F: Float> AsMut<[F; 4]> for $V<F> {
-            #[inline]
-            fn as_mut(&mut self) -> &mut [F; 4] {
-                unsafe { mem::transmute(self) }
-            }
+    impl<F: Float> AsMut<[F; 4]> for $V<F> {
+        #[inline]
+        fn as_mut(&mut self) -> &mut [F; 4] {
+            unsafe { mem::transmute(self) }
         }
+    }
 
-        impl<F: Float> Into<[F; 4]> for $V<F> {
-            #[inline]
-            fn into(self) -> [F; 4] {
-                *self.as_ref()
-            }
+    impl<F: Float> Into<[F; 4]> for $V<F> {
+        #[inline]
+        fn into(self) -> [F; 4] {
+            *self.as_ref()
         }
+    }
 
-        // can't convert from reference to reference, since array may not be aligned
+    // can't convert from reference to reference, since array may not be aligned
 
-        impl<F: Float> From<[F; 4]> for $V<F> {
-            #[inline]
-            fn from(v: [F; 4]) -> $V<F> {
-                unsafe {
-                    let mut res: $V<F> = std::mem::uninitialized();
-                    *res.as_mut() = v;
-                    res
-                }
+    impl<F: Float> From<[F; 4]> for $V<F> {
+        #[inline]
+        fn from(v: [F; 4]) -> $V<F> {
+            unsafe {
+                let mut res: $V<F> = std::mem::uninitialized();
+                *res.as_mut() = v;
+                res
             }
         }
     }
-}
+}}
 
 impl_fixed_array_conversions!(Vector0XYZ);
 impl_fixed_array_conversions!(VectorXYZ0);
@@ -138,32 +132,28 @@ impl_fixed_array_conversions!(VectorXYZW);
 
 /******************************************************************************/
 
-macro_rules! impl_vector3_conversions {
-    ($dstV:ident <- $srcV:ident) => {
-        impl<F: Float> From<$srcV<F>> for $dstV<F> {
-            #[inline]
-            fn from(v: $srcV<F>) -> $dstV<F> {
-                $dstV::<F>::from_xyz(v.x, v.y, v.z)
-            }
+macro_rules! impl_vector3_conversions { ($dstV:ident <- $srcV:ident) => {
+    impl<F: Float> From<$srcV<F>> for $dstV<F> {
+        #[inline]
+        fn from(v: $srcV<F>) -> $dstV<F> {
+            $dstV::<F>::from_xyz(v.x, v.y, v.z)
         }
     }
-}
+}}
 
 impl_vector3_conversions!(Vector0XYZ <- VectorXYZ0);
 impl_vector3_conversions!(VectorXYZ0 <- Vector0XYZ);
 
 /******************************************************************************/
 
-macro_rules! impl_vector3w_conversions {
-    ($srcV:ident <- $dstV:ident) => {
-        impl<F: Float> From<$srcV<F>> for $dstV<F> {
-            #[inline]
-            fn from(v: $srcV<F>) -> $dstV<F> {
-                $dstV::<F>::from_xyzw(v.x, v.y, v.z, v.w)
-            }
+macro_rules! impl_vector3w_conversions { ($srcV:ident <- $dstV:ident) => {
+    impl<F: Float> From<$srcV<F>> for $dstV<F> {
+        #[inline]
+        fn from(v: $srcV<F>) -> $dstV<F> {
+            $dstV::<F>::from_xyzw(v.x, v.y, v.z, v.w)
         }
     }
-}
+}}
 
 impl_vector3w_conversions!(VectorWXYZ <- VectorXYZW);
 impl_vector3w_conversions!(VectorXYZW <- VectorWXYZ);
