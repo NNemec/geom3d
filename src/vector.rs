@@ -138,6 +138,38 @@ impl_fixed_array_conversions!(VectorXYZW);
 
 /******************************************************************************/
 
+macro_rules! impl_vector3_conversions {
+    ($dstV:ident <- $srcV:ident) => {
+        impl<F: Float> From<$srcV<F>> for $dstV<F> {
+            #[inline]
+            fn from(v: $srcV<F>) -> $dstV<F> {
+                $dstV::<F>::from_xyz(v.x, v.y, v.z)
+            }
+        }
+    }
+}
+
+impl_vector3_conversions!(Vector0XYZ <- VectorXYZ0);
+impl_vector3_conversions!(VectorXYZ0 <- Vector0XYZ);
+
+/******************************************************************************/
+
+macro_rules! impl_vector3w_conversions {
+    ($srcV:ident <- $dstV:ident) => {
+        impl<F: Float> From<$srcV<F>> for $dstV<F> {
+            #[inline]
+            fn from(v: $srcV<F>) -> $dstV<F> {
+                $dstV::<F>::from_xyzw(v.x, v.y, v.z, v.w)
+            }
+        }
+    }
+}
+
+impl_vector3w_conversions!(VectorWXYZ <- VectorXYZW);
+impl_vector3w_conversions!(VectorXYZW <- VectorWXYZ);
+
+/******************************************************************************/
+
 #[test]
 fn test_constructor() {
     type F = f32;
@@ -180,5 +212,48 @@ fn test_constructor() {
         assert_eq!(v.x, x);
         assert_eq!(v.w, w);
         assert_eq!(Into::<[F;4]>::into(v), [x,y,z,w]);
+    }
+}
+
+#[test]
+fn test_conversion() {
+    type F = f32;
+    let x: F = 1.;
+    let y: F = 2.;
+    let z: F = 3.;
+    let w: F = 42.;
+    let zero: F = 0.;
+
+    {
+        let v1 = Vector0XYZ::from_xyz(x,y,z);
+        assert_eq!(Into::<[F;4]>::into(v1), [zero,x,y,z]);
+
+        let v2 = VectorXYZ0::from(v1);
+        assert_eq!(Into::<[F;4]>::into(v2), [x,y,z,zero]);
+
+        let v3 = Vector0XYZ::from(v1);
+        assert_eq!(Into::<[F;4]>::into(v3), [zero,x,y,z]);
+    }
+
+    {
+        let v1 = VectorWXYZ::from_xyz(x,y,z);
+        assert_eq!(Into::<[F;4]>::into(v1), [zero,x,y,z]);
+
+        let v2 = VectorXYZW::from(v1);
+        assert_eq!(Into::<[F;4]>::into(v2), [x,y,z,zero]);
+
+        let v3 = VectorWXYZ::from(v2);
+        assert_eq!(Into::<[F;4]>::into(v3), [zero,x,y,z]);
+    }
+
+    {
+        let v1 = VectorWXYZ::from_xyzw(x,y,z,w);
+        assert_eq!(Into::<[F;4]>::into(v1), [w,x,y,z]);
+
+        let v2 = VectorXYZW::from(v1);
+        assert_eq!(Into::<[F;4]>::into(v2), [x,y,z,w]);
+
+        let v3 = VectorWXYZ::from(v2);
+        assert_eq!(Into::<[F;4]>::into(v3), [w,x,y,z]);
     }
 }
