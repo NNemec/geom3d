@@ -16,6 +16,7 @@ use std::mem;
 
 use num_traits::Float;
 
+/******************************************************************************/
 
 #[cfg_attr(feature = "repr_simd", repr(simd))]
 #[derive(PartialEq, Eq, Copy, Clone, Hash)]
@@ -53,6 +54,44 @@ pub struct VectorWXYZ<F: Float> {
     pub z: F,
 }
 
+/******************************************************************************/
+
+macro_rules! impl_vector3_from_xyz {
+    ($V:ident) => {
+        impl<F: Float> $V<F> {
+            #[inline]
+            pub fn from_xyz(x: F, y: F, z: F) -> $V<F> {
+                $V { x: x, y: y, z: z, _w: F::zero() }
+            }
+        }
+    };
+}
+
+impl_vector3_from_xyz!(Vector0XYZ);
+impl_vector3_from_xyz!(VectorXYZ0);
+
+/******************************************************************************/
+
+macro_rules! impl_vector3w_from_xyzw {
+    ($V:ident) => {
+        impl<F: Float> $V<F> {
+            #[inline]
+            pub fn from_xyz(x: F, y: F, z: F) -> $V<F> {
+                $V { x: x, y: y, z: z, w: F::zero() }
+            }
+
+            #[inline]
+            pub fn from_xyzw(x: F, y: F, z: F, w: F) -> $V<F> {
+                $V { x: x, y: y, z: z, w: w }
+            }
+        }
+    };
+}
+
+impl_vector3w_from_xyzw!(VectorWXYZ);
+impl_vector3w_from_xyzw!(VectorXYZW);
+
+/******************************************************************************/
 
 macro_rules! impl_fixed_array_conversions {
     ($V:ident) => {
@@ -92,45 +131,12 @@ macro_rules! impl_fixed_array_conversions {
     }
 }
 
-macro_rules! impl_vector3 {
-    ($V:ident) => {
-        impl<F: Float> $V<F> {
-            #[inline]
-            pub fn from_xyz(x: F, y: F, z: F) -> $V<F> {
-                $V { x: x, y: y, z: z, _w: F::zero() }
-            }
-        }
+impl_fixed_array_conversions!(Vector0XYZ);
+impl_fixed_array_conversions!(VectorXYZ0);
+impl_fixed_array_conversions!(VectorWXYZ);
+impl_fixed_array_conversions!(VectorXYZW);
 
-        impl_fixed_array_conversions!($V);
-    };
-}
-
-macro_rules! impl_vector3w {
-    ($V:ident) => {
-        impl<F: Float> $V<F> {
-            #[inline]
-            pub fn from_xyz(x: F, y: F, z: F) -> $V<F> {
-                $V { x: x, y: y, z: z, w: F::zero() }
-            }
-
-            #[inline]
-            pub fn from_xyzw(x: F, y: F, z: F, w: F) -> $V<F> {
-                $V { x: x, y: y, z: z, w: w }
-            }
-        }
-
-        impl_fixed_array_conversions!($V);
-    };
-}
-
-
-
-
-impl_vector3!(Vector0XYZ);
-impl_vector3!(VectorXYZ0);
-impl_vector3w!(VectorWXYZ);
-impl_vector3w!(VectorXYZW);
-
+/******************************************************************************/
 
 #[test]
 fn test_constructor() {
@@ -143,29 +149,29 @@ fn test_constructor() {
 
     let v1 = Vector0XYZ::from_xyz(x,y,z);
     assert_eq!(v1.x, x);
-    assert_eq!(*v1.as_ref(), [zero,x,y,z]);
+    assert_eq!(Into::<[F;4]>::into(v1), [zero,x,y,z]);
 
     let v2 = VectorXYZ0::from_xyz(x,y,z);
     assert_eq!(v2.x, x);
-    assert_eq!(*v2.as_ref(), [x,y,z,zero]);
+    assert_eq!(Into::<[F;4]>::into(v2), [x,y,z,zero]);
 
     let v3 = VectorWXYZ::from_xyz(x,y,z);
     assert_eq!(v3.x, x);
     assert_eq!(v3.w, zero);
-    assert_eq!(*v3.as_ref(), [zero,x,y,z]);
+    assert_eq!(Into::<[F;4]>::into(v3), [zero,x,y,z]);
 
     let v4 = VectorXYZW::from_xyz(x,y,z);
     assert_eq!(v4.x, x);
     assert_eq!(v4.w, zero);
-    assert_eq!(*v4.as_ref(), [x,y,z,zero]);
+    assert_eq!(Into::<[F;4]>::into(v4), [x,y,z,zero]);
 
     let v5 = VectorWXYZ::from_xyzw(x,y,z,w);
     assert_eq!(v5.x, x);
     assert_eq!(v5.w, w);
-    assert_eq!(*v5.as_ref(), [w,x,y,z]);
+    assert_eq!(Into::<[F;4]>::into(v5), [w,x,y,z]);
 
     let v6 = VectorXYZW::from_xyzw(x,y,z,w);
     assert_eq!(v6.x, x);
     assert_eq!(v6.w, w);
-    assert_eq!(*v6.as_ref(), [x,y,z,w]);
+    assert_eq!(Into::<[F;4]>::into(v6), [x,y,z,w]);
 }
