@@ -147,31 +147,38 @@ fn test_constructor() {
     let w: F = 42.;
     let zero: F = 0.;
 
-    let v1 = Vector0XYZ::from_xyz(x,y,z);
-    assert_eq!(v1.x, x);
-    assert_eq!(Into::<[F;4]>::into(v1), [zero,x,y,z]);
-
-    let v2 = VectorXYZ0::from_xyz(x,y,z);
-    assert_eq!(v2.x, x);
-    assert_eq!(Into::<[F;4]>::into(v2), [x,y,z,zero]);
-
-    let v3 = VectorWXYZ::from_xyz(x,y,z);
-    assert_eq!(v3.x, x);
-    assert_eq!(v3.w, zero);
-    assert_eq!(Into::<[F;4]>::into(v3), [zero,x,y,z]);
-
-    let v4 = VectorXYZW::from_xyz(x,y,z);
-    assert_eq!(v4.x, x);
-    assert_eq!(v4.w, zero);
-    assert_eq!(Into::<[F;4]>::into(v4), [x,y,z,zero]);
-
-    let v5 = VectorWXYZ::from_xyzw(x,y,z,w);
-    assert_eq!(v5.x, x);
-    assert_eq!(v5.w, w);
-    assert_eq!(Into::<[F;4]>::into(v5), [w,x,y,z]);
-
-    let v6 = VectorXYZW::from_xyzw(x,y,z,w);
-    assert_eq!(v6.x, x);
-    assert_eq!(v6.w, w);
-    assert_eq!(Into::<[F;4]>::into(v6), [x,y,z,w]);
+    {
+        let v = Vector0XYZ::from_xyz(x,y,z);
+        assert_eq!(v.x, x);
+        assert_eq!(Into::<[F;4]>::into(v), [zero,x,y,z]);
+    }
+    {
+        let v = VectorXYZ0::from_xyz(x,y,z);
+        assert_eq!(v.x, x);
+        assert_eq!(Into::<[F;4]>::into(v), [x,y,z,zero]);
+    }
+    {
+        let v = VectorWXYZ::from_xyz(x,y,z);
+        assert_eq!(v.x, x);
+        assert_eq!(v.w, zero);
+        assert_eq!(Into::<[F;4]>::into(v), [zero,x,y,z]);
+    }
+    {
+        let v = VectorXYZW::from_xyz(x,y,z);
+        assert_eq!(v.x, x);
+        assert_eq!(v.w, zero);
+        assert_eq!(Into::<[F;4]>::into(v), [x,y,z,zero]);
+    }
+    {
+        let v = VectorWXYZ::from_xyzw(x,y,z,w);
+        assert_eq!(v.x, x);
+        assert_eq!(v.w, w);
+        assert_eq!(Into::<[F;4]>::into(v), [w,x,y,z]);
+    }
+    {
+        let v = VectorXYZW::from_xyzw(x,y,z,w);
+        assert_eq!(v.x, x);
+        assert_eq!(v.w, w);
+        assert_eq!(Into::<[F;4]>::into(v), [x,y,z,w]);
+    }
 }
