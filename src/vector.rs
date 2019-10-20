@@ -14,7 +14,7 @@
 
 use std::mem;
 
-use num_traits::Float;
+use num_traits::{Float, Zero};
 
 /******************************************************************************/
 
@@ -160,8 +160,74 @@ impl_vector3w_conversions!(VectorXYZW <- VectorWXYZ);
 
 /******************************************************************************/
 
+macro_rules! impl_vector3_operators { ($V:ident) => {
+
+    impl<F: Float> std::ops::Add for $V<F> {
+        type Output = Self;
+        fn add(self, other: Self) -> Self {
+            unsafe {
+                std::intrinsics::assume(self._w == F::zero());
+                std::intrinsics::assume(other._w == F::zero());
+            }
+            $V { x: self.x + other.x, y: self.y + other.y, z: self.z + other.z, _w: self._w + other._w }
+        }
+    }
+
+    impl<F: Float> std::ops::Sub for $V<F> {
+        type Output = Self;
+        fn sub(self, other: Self) -> Self {
+            unsafe {
+                std::intrinsics::assume(self._w == F::zero());
+                std::intrinsics::assume(other._w == F::zero());
+            }
+            $V { x: self.x - other.x, y: self.y - other.y, z: self.z - other.z, _w: self._w - other._w }
+        }
+    }
+
+    impl<F: Float> std::ops::Mul<F> for $V<F> {
+        type Output = Self;
+        fn mul(self, scalar: F) -> Self {
+            unsafe {
+                std::intrinsics::assume(self._w == F::zero());
+            }
+            $V { x: self.x * scalar, y: self.y * scalar, z: self.z * scalar, _w: self._w * scalar }
+        }
+    }
+
+/*
+    impl<F: Float> std::ops::Mul<$V<F>> for F {
+        type Output = $V<F>;
+        fn mul(self, vector: $V<F>) -> Output {
+            unsafe {
+                std::intrinsics::assume(vector._w == F::zero());
+            }
+            $V { x: self * vector.x, y: self * vector.y, z: self * vector.z, _w: self * vector._w }
+        }
+    }
+*/
+
+    impl<F: Float> Zero for $V<F> {
+        fn zero() -> $V<F> {
+            $V { x: F::zero(), y: F::zero(), z: F::zero(), _w: F::zero() }
+        }
+        fn is_zero(&self) -> bool {
+            unsafe {
+                std::intrinsics::assume(self._w == F::zero());
+            }
+            self.x.is_zero() && self.y.is_zero() && self.z.is_zero() && self._w.is_zero()
+        }
+    }
+
+}}
+
+impl_vector3_operators!(Vector0XYZ);
+impl_vector3_operators!(VectorXYZ0);
+
+
+/******************************************************************************/
+
 #[test]
-fn test_constructor() {
+fn test_constructors() {
     type F = f32;
     let x: F = 1.;
     let y: F = 2.;
@@ -206,7 +272,7 @@ fn test_constructor() {
 }
 
 #[test]
-fn test_conversion() {
+fn test_conversions() {
     type F = f32;
     let x: F = 1.;
     let y: F = 2.;
@@ -245,5 +311,21 @@ fn test_conversion() {
 
         let v3 = VectorWXYZ::from(v2);
         assert_eq!(Into::<[F;4]>::into(v3), [w,x,y,z]);
+    }
+}
+
+#[test]
+fn test_operators() {
+    type F = f32;
+    type V = Vector0XYZ<F>;
+
+    {
+        let v123 = V::from_xyz(1.,2.,3.);
+        let v123neg= V::from_xyz(-1.,-2.,-3.);
+        let v246 = V::from_xyz(2.,4.,6.);
+
+        assert!((v123 + v123neg).is_zero());
+        assert!((v123 + v123 - v246).is_zero());
+        assert!((v123 * 2. - v246).is_zero());
     }
 }
